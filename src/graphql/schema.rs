@@ -13,6 +13,11 @@ impl Query {
         "v1"
     }
 
+    /// All the humanoid creatures in the Star Wars universe that we know about.
+    fn humans(context: &Context) -> FieldResult<Vec<Human>> {
+        Ok(context.humans())
+    }
+
     /// A humanoid creature in the Star Wars universe.
     fn human(context: &Context, id: Uuid) -> FieldResult<Human> {
         let human = context.find_human(&id)?;

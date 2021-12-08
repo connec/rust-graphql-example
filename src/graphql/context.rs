@@ -11,6 +11,10 @@ pub(crate) struct Context {
 }
 
 impl Context {
+    pub(crate) fn humans(&self) -> Vec<Human> {
+        self.humans.read().values().cloned().collect()
+    }
+
     pub(crate) fn find_human(&self, id: &Uuid) -> Result<Human, &'static str> {
         self.humans.read().get(id).cloned().ok_or("not found")
     }
