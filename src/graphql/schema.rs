@@ -39,8 +39,13 @@ impl Mutation {
 /// Episodes in the original (and best) Star Wars trilogy.
 #[derive(Clone, Copy, juniper::GraphQLEnum)]
 pub(crate) enum Episode {
+    /// Star Wars: Episode IV – A New Hope
     NewHope,
+
+    /// Star Wars: Episode V – The Empire Strikes Back
     Empire,
+
+    /// Star Wars: Episode VI – Return of the Jedi
     Jedi,
 }
 
