@@ -14,16 +14,24 @@ use axum::{
 use juniper::{EmptySubscription, RootNode};
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
-use tracing::info;
+use tracing::{info, trace};
 use tracing_subscriber::EnvFilter;
 
 use self::graphql::{Context, Mutation, Query};
+
+#[derive(Debug, serde::Deserialize)]
+struct Config {
+    database_url: String,
+}
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
+
+    let config: Config = envy::from_env().unwrap();
+    trace!("TODO: connect to {}", config.database_url);
 
     let context = Arc::new(Context::default());
     let root_node = Arc::new(RootNode::new(Query, Mutation, EmptySubscription::new()));
