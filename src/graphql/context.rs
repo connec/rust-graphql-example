@@ -5,12 +5,19 @@ use uuid::Uuid;
 
 use super::{Human, NewHuman};
 
-#[derive(Default)]
 pub(crate) struct Context {
+    _db: sqlx::PgPool,
     humans: RwLock<HashMap<Uuid, Human>>,
 }
 
 impl Context {
+    pub(crate) fn new(db: sqlx::PgPool) -> Self {
+        Self {
+            _db: db,
+            humans: Default::default(),
+        }
+    }
+
     pub(crate) fn humans(&self) -> Vec<Human> {
         self.humans.read().values().cloned().collect()
     }

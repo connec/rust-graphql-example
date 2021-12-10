@@ -14,7 +14,7 @@ use axum::{
 use juniper::{EmptySubscription, RootNode};
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
-use tracing::{info, trace};
+use tracing::info;
 use tracing_subscriber::EnvFilter;
 
 use self::graphql::{Context, Mutation, Query};
@@ -31,9 +31,10 @@ async fn main() {
         .init();
 
     let config: Config = envy::from_env().unwrap();
-    trace!("TODO: connect to {}", config.database_url);
 
-    let context = Arc::new(Context::default());
+    let db = sqlx::PgPool::connect(&config.database_url).await.unwrap();
+    let context = Arc::new(Context::new(db));
+
     let root_node = Arc::new(RootNode::new(Query, Mutation, EmptySubscription::new()));
 
     let middleware = ServiceBuilder::new().layer(TraceLayer::new_for_http());
