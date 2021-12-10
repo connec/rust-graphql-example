@@ -5,11 +5,6 @@ set -euo pipefail
 container_name=sample-db
 container_image=postgres:14
 
-export PGHOST=localhost
-export PGPORT=5432
-export PGUSER=postgres
-export PGPASSWORD=password
-
 if ! [[ "$(docker ps --filter name="$container_name" --latest -q)" != '' ]]; then
   if
     ! output="$(
