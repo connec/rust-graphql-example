@@ -1,4 +1,4 @@
-mod graphql;
+mod gql;
 pub(crate) mod model;
 
 use std::{
@@ -18,7 +18,7 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-pub(crate) use self::graphql::{Context, Mutation, Query};
+pub(crate) use self::gql::{Context, Mutation, Query};
 
 #[derive(Debug, serde::Deserialize)]
 struct Config {

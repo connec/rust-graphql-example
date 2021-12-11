@@ -139,7 +139,7 @@ where
         info: &'a Self::TypeInfo,
         selection: Option<&'a [juniper::Selection<S>]>,
         executor: &'a juniper::Executor<Self::Context, S>,
-    ) -> futures::future::BoxFuture<'a, juniper::ExecutionResult<S>> {
+    ) -> juniper::BoxFuture<'a, juniper::ExecutionResult<S>> {
         self.0.resolve_async(info, selection, executor)
     }
 }
