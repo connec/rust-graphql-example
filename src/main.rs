@@ -1,3 +1,4 @@
+mod db;
 mod gql;
 pub(crate) mod model;
 
@@ -18,7 +19,10 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-pub(crate) use self::gql::{Context, Mutation, Query};
+pub(crate) use self::{
+    db::Db,
+    gql::{Context, Mutation, Query},
+};
 
 #[derive(Debug, serde::Deserialize)]
 struct Config {
@@ -33,7 +37,7 @@ async fn main() {
 
     let config: Config = envy::from_env().unwrap();
 
-    let db = sqlx::PgPool::connect(&config.database_url).await.unwrap();
+    let db = Db::connect(&config.database_url).await.unwrap();
     let context = Arc::new(Context::new(db));
 
     let root_node = Arc::new(RootNode::new(Query, Mutation, EmptySubscription::new()));
