@@ -1,6 +1,6 @@
 mod db;
 mod gql;
-pub(crate) mod model;
+mod model;
 
 use std::{
     net::{Ipv4Addr, SocketAddr, TcpListener},
@@ -19,7 +19,7 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-pub(crate) use self::{
+use self::{
     db::Db,
     gql::{Context, Mutation, Query},
 };
