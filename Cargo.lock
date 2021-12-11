@@ -1114,9 +1114,9 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "envy",
+ "futures",
  "juniper",
  "juniper_hyper",
- "parking_lot",
  "serde",
  "sqlx",
  "tokio",
@@ -1345,6 +1345,7 @@ dependencies = [
  "thiserror",
  "tokio-stream",
  "url",
+ "uuid",
  "webpki",
  "webpki-roots",
  "whoami",

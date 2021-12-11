@@ -1,7 +1,7 @@
 use juniper::FieldResult;
 use uuid::Uuid;
 
-use crate::Context;
+use crate::{Context, model::{NewHuman, Human}};
 
 pub(crate) struct Query;
 
@@ -14,13 +14,13 @@ impl Query {
     }
 
     /// All the humanoid creatures in the Star Wars universe that we know about.
-    fn humans(context: &Context) -> FieldResult<Vec<Human>> {
-        Ok(context.humans())
+    async fn humans(context: &Context) -> FieldResult<Vec<Human>> {
+        Ok(context.humans().await?)
     }
 
     /// A humanoid creature in the Star Wars universe.
-    fn human(context: &Context, id: Uuid) -> FieldResult<Human> {
-        let human = context.find_human(&id)?;
+    async fn human(context: &Context, id: Uuid) -> FieldResult<Human> {
+        let human = context.find_human(&id).await?;
         Ok(human)
     }
 }
@@ -30,77 +30,8 @@ pub(crate) struct Mutation;
 /// The root mutation structure.
 #[juniper::graphql_object(Context = Context)]
 impl Mutation {
-    fn create_human(context: &Context, new_human: NewHuman) -> FieldResult<Human> {
-        let human = context.insert_human(new_human)?;
+    async fn create_human(context: &Context, new_human: NewHuman) -> FieldResult<Human> {
+        let human = context.insert_human(new_human).await?;
         Ok(human)
-    }
-}
-
-/// Episodes in the original (and best) Star Wars trilogy.
-#[derive(Clone, Copy, juniper::GraphQLEnum)]
-pub(crate) enum Episode {
-    /// Star Wars: Episode IV – A New Hope
-    NewHope,
-
-    /// Star Wars: Episode V – The Empire Strikes Back
-    Empire,
-
-    /// Star Wars: Episode VI – Return of the Jedi
-    Jedi,
-}
-
-/// A humanoid creature in the Star Wars universe.
-#[derive(Clone, juniper::GraphQLObject)]
-pub(crate) struct Human {
-    /// Their unique identifier, assigned by us.
-    id: Uuid,
-
-    /// Their name.
-    name: String,
-
-    /// The episodes in which they appeared.
-    appears_in: Vec<Episode>,
-
-    /// Their home planet.
-    home_planet: String,
-}
-
-impl Human {
-    pub(crate) fn new(new_human: NewHuman) -> Self {
-        Self {
-            id: Uuid::new_v4(),
-            name: new_human.name,
-            appears_in: new_human.appears_in,
-            home_planet: new_human.home_planet,
-        }
-    }
-
-    pub(crate) fn id(&self) -> Uuid {
-        self.id
-    }
-
-    pub(crate) fn name(&self) -> &str {
-        &self.name
-    }
-}
-
-/// A new humanoid creature in the Star Wars universe.
-///
-/// `id` is assigned by the server upon creation.
-#[derive(juniper::GraphQLInputObject)]
-pub(crate) struct NewHuman {
-    /// Their name.
-    name: String,
-
-    /// The episodes in which they appeared.
-    appears_in: Vec<Episode>,
-
-    /// Their home planet.
-    home_planet: String,
-}
-
-impl NewHuman {
-    pub(crate) fn name(&self) -> &str {
-        &self.name
     }
 }

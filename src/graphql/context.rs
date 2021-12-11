@@ -1,45 +1,56 @@
-use std::collections::HashMap;
-
-use parking_lot::RwLock;
 use uuid::Uuid;
 
-use super::{Human, NewHuman};
+use crate::model::{Human, NewHuman};
 
 pub(crate) struct Context {
-    _db: sqlx::PgPool,
-    humans: RwLock<HashMap<Uuid, Human>>,
+    db: sqlx::PgPool,
 }
 
 impl Context {
     pub(crate) fn new(db: sqlx::PgPool) -> Self {
-        Self {
-            _db: db,
-            humans: Default::default(),
-        }
+        Self { db }
     }
 
-    pub(crate) fn humans(&self) -> Vec<Human> {
-        self.humans.read().values().cloned().collect()
+    pub(crate) async fn humans(&self) -> Result<Vec<Human>, sqlx::Error> {
+        sqlx::query_as!(
+            Human,
+            "
+SELECT id, name, appears_in AS \"appears_in: _\", home_planet
+FROM humans
+            ",
+        )
+        .fetch_all(&self.db)
+        .await
     }
 
-    pub(crate) fn find_human(&self, id: &Uuid) -> Result<Human, &'static str> {
-        self.humans.read().get(id).cloned().ok_or("not found")
+    pub(crate) async fn find_human(&self, id: &Uuid) -> Result<Human, sqlx::Error> {
+        sqlx::query_as!(
+            Human,
+            "
+SELECT id, name, appears_in AS \"appears_in: _\", home_planet
+FROM humans
+WHERE id = $1
+            ",
+            id
+        )
+        .fetch_one(&self.db)
+        .await
     }
 
-    pub(crate) fn insert_human(&self, new_human: NewHuman) -> Result<Human, &'static str> {
-        let mut humans = self.humans.write();
-
-        if humans
-            .values()
-            .any(|human| human.name() == new_human.name())
-        {
-            return Err("a human with that name already exists");
-        }
-
-        let human = Human::new(new_human);
-        humans.insert(human.id(), human.clone());
-
-        Ok(human)
+    pub(crate) async fn insert_human(&self, new_human: NewHuman) -> Result<Human, sqlx::Error> {
+        sqlx::query_as!(
+            Human,
+            "
+INSERT INTO humans (name, appears_in, home_planet)
+VALUES ($1, $2, $3)
+RETURNING id, name, appears_in AS \"appears_in: _\", home_planet
+            ",
+            new_human.name(),
+            new_human.appears_in() as _,
+            new_human.home_planet(),
+        )
+        .fetch_one(&self.db)
+        .await
     }
 }
 
