@@ -3,17 +3,15 @@ use uuid::Uuid;
 use crate::model::{Human, NewHuman};
 
 pub(crate) struct Db {
-    pool: sqlx::PgPool,
+    tx: crate::Tx,
 }
 
 impl Db {
-    pub(crate) async fn connect(uri: &str) -> Result<Self, sqlx::Error> {
-        Ok(Self {
-            pool: sqlx::PgPool::connect(uri).await?,
-        })
+    pub(crate) fn new(tx: crate::Tx) -> Self {
+        Self { tx }
     }
 
-    pub(crate) async fn list_humans(&self) -> Result<Vec<Human>, sqlx::Error> {
+    pub(crate) async fn list_humans(&mut self) -> Result<Vec<Human>, sqlx::Error> {
         sqlx::query_as!(
             Human,
             "
@@ -21,11 +19,11 @@ impl Db {
             FROM humans
             ",
         )
-        .fetch_all(&self.pool)
+        .fetch_all(&mut self.tx)
         .await
     }
 
-    pub(crate) async fn get_human(&self, id: &Uuid) -> Result<Human, sqlx::Error> {
+    pub(crate) async fn get_human(&mut self, id: &Uuid) -> Result<Human, sqlx::Error> {
         sqlx::query_as!(
             Human,
             "
@@ -35,11 +33,11 @@ impl Db {
             ",
             id
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut self.tx)
         .await
     }
 
-    pub(crate) async fn insert_human(&self, new_human: NewHuman) -> Result<Human, sqlx::Error> {
+    pub(crate) async fn insert_human(&mut self, new_human: NewHuman) -> Result<Human, sqlx::Error> {
         sqlx::query_as!(
             Human,
             "
@@ -51,7 +49,7 @@ impl Db {
             new_human.appears_in() as _,
             new_human.home_planet(),
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut self.tx)
         .await
     }
 }

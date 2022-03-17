@@ -24,6 +24,8 @@ use self::{
     gql::{Context, Mutation, Query},
 };
 
+type Tx = axum_sqlx_tx::Tx<sqlx::Postgres>;
+
 #[derive(Debug, serde::Deserialize)]
 struct Config {
     database_url: String,
@@ -36,13 +38,13 @@ async fn main() {
         .init();
 
     let config: Config = envy::from_env().unwrap();
+    let pool = sqlx::PgPool::connect(&config.database_url).await.unwrap();
 
-    let db = Db::connect(&config.database_url).await.unwrap();
-    let context = Arc::new(Context::new(db));
+    let middleware = ServiceBuilder::new()
+        .layer(TraceLayer::new_for_http())
+        .layer(axum_sqlx_tx::Layer::new(pool));
 
     let root_node = Arc::new(RootNode::new(Query, Mutation, EmptySubscription::new()));
-
-    let middleware = ServiceBuilder::new().layer(TraceLayer::new_for_http());
 
     let app = Router::new()
         .route(
@@ -51,8 +53,9 @@ async fn main() {
         )
         .route(
             "/query",
-            post(|request: Request<Body>| async {
-                juniper_hyper::graphql(root_node, context, request).await
+            post(|tx: Tx, request: Request<Body>| async {
+                let context = Context::new(Db::new(tx));
+                juniper_hyper::graphql(root_node, Arc::new(context), request).await
             }),
         )
         .layer(middleware);
